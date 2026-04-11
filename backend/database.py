@@ -55,6 +55,7 @@ def init_db():
                 clipboard_sync BOOLEAN DEFAULT 1,
                 fingerprint_noise BOOLEAN DEFAULT 1,
                 disable_http2 BOOLEAN DEFAULT 0,
+                incognito BOOLEAN DEFAULT 0,
                 color_scheme TEXT,
                 notes TEXT,
                 user_data_dir TEXT NOT NULL,
@@ -84,6 +85,9 @@ def init_db():
             conn.execute("ALTER TABLE profiles ADD COLUMN fingerprint_noise BOOLEAN DEFAULT 1")
             conn.execute("ALTER TABLE profiles ADD COLUMN disable_http2 BOOLEAN DEFAULT 0")
             conn.commit()
+        if "incognito" not in cols:
+            conn.execute("ALTER TABLE profiles ADD COLUMN incognito BOOLEAN DEFAULT 0")
+            conn.commit()
 
 
 def _now() -> str:
@@ -106,9 +110,11 @@ def create_profile(
             """INSERT INTO profiles (
                 id, name, fingerprint_seed, proxy, timezone, locale, platform,
                 user_agent, screen_width, screen_height, gpu_vendor, gpu_renderer,
-                hardware_concurrency, humanize, human_preset, headless, geoip,
-                clipboard_sync, color_scheme, notes, user_data_dir, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                hardware_concurrency, device_memory, webrtc_ip, storage_quota, brand,
+                humanize, human_preset, headless, geoip,
+                clipboard_sync, fingerprint_noise, disable_http2, incognito,
+                color_scheme, notes, user_data_dir, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 profile_id, name, seed,
                 fields.get("proxy"),
@@ -121,11 +127,18 @@ def create_profile(
                 fields.get("gpu_vendor"),
                 fields.get("gpu_renderer"),
                 fields.get("hardware_concurrency"),
+                fields.get("device_memory"),
+                fields.get("webrtc_ip"),
+                fields.get("storage_quota"),
+                fields.get("brand"),
                 fields.get("humanize", False),
                 fields.get("human_preset", "default"),
                 fields.get("headless", False),
                 fields.get("geoip", False),
                 fields.get("clipboard_sync", True),
+                fields.get("fingerprint_noise", True),
+                fields.get("disable_http2", False),
+                fields.get("incognito", False),
                 fields.get("color_scheme"),
                 fields.get("notes"),
                 user_data_dir, now, now,
@@ -183,8 +196,10 @@ def update_profile(profile_id: str, **fields: Any) -> dict[str, Any] | None:
     for col in (
         "name", "fingerprint_seed", "proxy", "timezone", "locale", "platform",
         "user_agent", "screen_width", "screen_height", "gpu_vendor", "gpu_renderer",
-        "hardware_concurrency", "humanize", "human_preset", "headless", "geoip",
-        "clipboard_sync", "color_scheme", "notes",
+        "hardware_concurrency", "device_memory", "webrtc_ip", "storage_quota", "brand",
+        "humanize", "human_preset", "headless", "geoip",
+        "clipboard_sync", "fingerprint_noise", "disable_http2", "incognito",
+        "color_scheme", "notes",
     ):
         if col in fields:
             update_cols.append(f"{col} = ?")

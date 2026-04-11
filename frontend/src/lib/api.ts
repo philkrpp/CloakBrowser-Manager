@@ -27,6 +27,7 @@ export interface Profile {
   clipboard_sync: boolean;
   fingerprint_noise: boolean;
   disable_http2: boolean;
+  incognito: boolean;
   color_scheme: string | null;
   notes: string | null;
   user_data_dir: string;
@@ -62,6 +63,7 @@ export interface ProfileCreateData {
   clipboard_sync?: boolean;
   fingerprint_noise?: boolean;
   disable_http2?: boolean;
+  incognito?: boolean;
   color_scheme?: string | null;
   notes?: string | null;
   tags?: { tag: string; color: string | null }[];

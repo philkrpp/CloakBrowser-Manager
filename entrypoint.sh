@@ -23,4 +23,4 @@ cd /app
 echo ""
 echo "  CloakBrowser Manager running at http://localhost:3000"
 echo ""
-exec uvicorn backend.main:app --host 0.0.0.0 --port 3000 --log-level warning
+exec uvicorn backend.main:app --host 0.0.0.0 --port 3000 --log-level warning --ws-ping-interval 10 --ws-ping-timeout 30

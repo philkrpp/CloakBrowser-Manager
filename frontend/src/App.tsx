@@ -94,7 +94,7 @@ function AppContent({ authRequired, onLogout }: AppContentProps) {
   const [view, setView] = useState<View>("empty");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [reconnectKey, setReconnectKey] = useState(0);
-  const maxReconnects = 3;
+  const maxReconnects = 10;
 
   const selected = profiles.find((p) => p.id === selectedId) ?? null;
 

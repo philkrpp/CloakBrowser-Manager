@@ -6,9 +6,11 @@ import asyncio
 import json
 import logging
 import os
+import shutil
 import socket
+import tempfile
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -152,6 +154,7 @@ class RunningProfile:
     display: int
     ws_port: int
     cdp_port: int
+    temp_dir: str | None = None  # incognito temp user-data-dir (cleaned up on close)
 
 
 class BrowserManager:
@@ -183,14 +186,19 @@ class BrowserManager:
                 await self.vnc.stop_vnc(display)
                 raise ValueError(f"CDP port {cdp_port} is already in use")
 
-        # Clean stale Chromium lock files (left by previous container crashes)
-        user_data_dir = Path(profile["user_data_dir"])
-        for lock_file in ("SingletonLock", "SingletonCookie", "SingletonSocket"):
-            lock_path = user_data_dir / lock_file
-            lock_path.unlink(missing_ok=True)
-
-        # Set up bookmarks and search engine on first launch
-        _init_profile_defaults(user_data_dir)
+        incognito = bool(profile.get("incognito", False))
+        if incognito:
+            temp_dir = tempfile.mkdtemp(prefix="cloak-incognito-")
+            user_data_dir = Path(temp_dir)
+        else:
+            temp_dir = None
+            user_data_dir = Path(profile["user_data_dir"])
+            # Clean stale Chromium lock files (left by previous container crashes)
+            for lock_file in ("SingletonLock", "SingletonCookie", "SingletonSocket"):
+                lock_path = user_data_dir / lock_file
+                lock_path.unlink(missing_ok=True)
+            # Set up bookmarks and search engine on first launch
+            _init_profile_defaults(user_data_dir)
 
         try:
             # Start KasmVNC on the allocated display
@@ -214,7 +222,7 @@ class BrowserManager:
             # Launch CloakBrowser on that display
             # DISPLAY is passed via env kwarg to avoid process-wide os.environ mutation
             context = await launch_persistent_context_async(
-                user_data_dir=profile["user_data_dir"],
+                user_data_dir=str(user_data_dir),
                 headless=bool(profile.get("headless", False)),
                 proxy=proxy,
                 args=extra_args,
@@ -261,6 +269,7 @@ class BrowserManager:
                 display=display,
                 ws_port=ws_port,
                 cdp_port=cdp_port,
+                temp_dir=temp_dir,
             )
 
             # Auto-cleanup if browser crashes or user closes Chrome via VNC
@@ -294,6 +303,8 @@ class BrowserManager:
         if running:
             logger.info("Browser closed for profile %s, cleaning up", profile_id)
             await self.vnc.stop_vnc(running.display)
+            if running.temp_dir:
+                shutil.rmtree(running.temp_dir, ignore_errors=True)
 
     async def stop(self, profile_id: str):
         """Stop a running browser instance."""
@@ -312,6 +323,8 @@ class BrowserManager:
             logger.warning("Error closing context for %s: %s", profile_id, exc)
 
         await self.vnc.stop_vnc(running.display)
+        if running.temp_dir:
+            shutil.rmtree(running.temp_dir, ignore_errors=True)
 
     def get_status(self, profile_id: str) -> dict[str, Any]:
         """Get running status for a profile."""

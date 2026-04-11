@@ -77,6 +77,7 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
     clipboard_sync: true,
     fingerprint_noise: true,
     disable_http2: false,
+    incognito: false,
     color_scheme: "light",
     tags: [],
   });
@@ -112,6 +113,7 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
         clipboard_sync: profile.clipboard_sync,
         fingerprint_noise: profile.fingerprint_noise,
         disable_http2: profile.disable_http2,
+        incognito: profile.incognito,
         color_scheme: profile.color_scheme,
         notes: profile.notes,
         tags: profile.tags ?? [],
@@ -516,6 +518,15 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
                 className="rounded border-border bg-surface-2"
               />
               Headless mode (no VNC display)
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.incognito ?? false}
+                onChange={(e) => set("incognito", e.target.checked)}
+                className="rounded border-border bg-surface-2"
+              />
+              Inkognito (kein persistentes Datenverzeichnis — Cookies/Cache werden beim Schließen gelöscht)
             </label>
             <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
               <input

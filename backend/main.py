@@ -790,8 +790,18 @@ async def vnc_proxy(websocket: WebSocket, profile_id: str):
                 except Exception as exc:
                     logger.warning("VNC proxy [v->c]: %s: %s (after %d msgs)", type(exc).__name__, exc, count)
 
+            async def keepalive():
+                """Send empty frames to keep the client WebSocket alive."""
+                try:
+                    while True:
+                        await asyncio.sleep(10)
+                        await websocket.send_bytes(b"")
+                except Exception:
+                    pass
+
             c2v = asyncio.create_task(client_to_vnc(), name="c2v")
             v2c = asyncio.create_task(vnc_to_client(), name="v2c")
+            ka = asyncio.create_task(keepalive(), name="keepalive")
 
             done, pending = await asyncio.wait(
                 [c2v, v2c],
@@ -818,6 +828,7 @@ async def vnc_proxy(websocket: WebSocket, profile_id: str):
                     for line in log_content.strip().split("\n")[-20:]:
                         logger.info("Xvnc[:%d] %s", running.display, line)
 
+            ka.cancel()
             for task in pending:
                 task.cancel()
 

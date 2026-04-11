@@ -31,6 +31,7 @@ class ProfileCreate(BaseModel):
     clipboard_sync: bool = True
     fingerprint_noise: bool = True  # canvas/WebGL noise injection
     disable_http2: bool = False  # disable HTTP/2 (workaround for some sites)
+    incognito: bool = False  # no persistent user data dir
     color_scheme: Literal["light", "dark", "no-preference"] | None = None
     notes: str | None = None
     tags: list[TagCreate] | None = None
@@ -60,6 +61,7 @@ class ProfileUpdate(BaseModel):
     clipboard_sync: bool | None = None
     fingerprint_noise: bool | None = None
     disable_http2: bool | None = None
+    incognito: bool | None = None
     color_scheme: Literal["light", "dark", "no-preference"] | None = Field(default=None)
     notes: str | None = Field(default=None)
     tags: list[TagCreate] | None = None
@@ -100,6 +102,7 @@ class ProfileResponse(BaseModel):
     clipboard_sync: bool = True
     fingerprint_noise: bool = True
     disable_http2: bool = False
+    incognito: bool = False
 
     @field_validator("clipboard_sync", mode="before")
     @classmethod
