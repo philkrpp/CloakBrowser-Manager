@@ -26,7 +26,7 @@ Free, self-hosted alternative to Multilogin, GoLogin, and AdsPower.
 Each profile is an isolated CloakBrowser instance with its own fingerprint, proxy, cookies, and session data. Profiles persist across restarts. Everything runs in one Docker container.
 
 ```bash
-docker run -p 8080:8080 -v cloakprofiles:/data cloakhq/cloakbrowser-manager
+docker run -p 3000:3000 -v cloakprofiles:/data cloakhq/cloakbrowser-manager
 ```
 
 Or build from source:
@@ -37,7 +37,7 @@ cd CloakBrowser-Manager
 docker compose up --build
 ```
 
-Open [http://localhost:8080](http://localhost:8080) in your browser. Create a profile. Click Launch. Done.
+Open [http://localhost:3000](http://localhost:3000) in your browser. Create a profile. Click Launch. Done.
 
 > **Early alpha** — this project is under active development. Expect bugs. If you find one, please [open an issue](https://github.com/CloakHQ/CloakBrowser-Manager/issues).
 
@@ -81,7 +81,7 @@ Each CloakBrowser profile generates a completely different device identity. To t
 cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8080
+uvicorn main:app --reload --port 3000
 ```
 
 ### Frontend
@@ -111,7 +111,7 @@ Pull the latest image and restart:
 ```bash
 docker pull cloakhq/cloakbrowser-manager
 docker stop <container-id>
-docker run -p 8080:8080 -v cloakprofiles:/data cloakhq/cloakbrowser-manager
+docker run -p 3000:3000 -v cloakprofiles:/data cloakhq/cloakbrowser-manager
 ```
 
 Your profiles and session data are stored in the `cloakprofiles` volume and persist across updates.
@@ -125,7 +125,7 @@ from playwright.async_api import async_playwright
 
 async with async_playwright() as pw:
     browser = await pw.chromium.connect_over_cdp(
-        "http://localhost:8080/api/profiles/<profile-id>/cdp"
+        "http://localhost:3000/api/profiles/<profile-id>/cdp"
     )
     page = browser.contexts[0].pages[0]
     await page.goto("https://example.com")
@@ -135,7 +135,7 @@ async with async_playwright() as pw:
 const { chromium } = require("playwright");
 
 const browser = await chromium.connectOverCDP(
-  "http://localhost:8080/api/profiles/<profile-id>/cdp"
+  "http://localhost:3000/api/profiles/<profile-id>/cdp"
 );
 const page = browser.contexts()[0].pages()[0];
 await page.goto("https://example.com");
@@ -148,17 +148,17 @@ The CDP URL is available in the toolbar (code icon) when a profile is running. T
 The container binds to localhost only. To access from a remote server:
 
 ```bash
-ssh -L 8080:localhost:8080 your-server
+ssh -L 3000:localhost:3000 your-server
 ```
 
-Then open `http://localhost:8080`.
+Then open `http://localhost:3000`.
 
 ## Authentication
 
 By default, there is no authentication (ideal for local use). To protect the web UI and API when hosting on a network, set the `AUTH_TOKEN` environment variable:
 
 ```bash
-docker run -p 8080:8080 -v cloakprofiles:/data -e AUTH_TOKEN=your-secret-token cloakhq/cloakbrowser-manager
+docker run -p 3000:3000 -v cloakprofiles:/data -e AUTH_TOKEN=your-secret-token cloakhq/cloakbrowser-manager
 ```
 
 Or in `docker-compose.yml`:

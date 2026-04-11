@@ -867,7 +867,7 @@ async def cdp_json_version(profile_id: str, request: Request):
         raise HTTPException(status_code=502, detail="CDP endpoint unreachable")
 
     # Rewrite webSocketDebuggerUrl to point through our proxy
-    host = request.headers.get("host", "localhost:8080")
+    host = request.headers.get("host", "localhost:3000")
     ws_scheme = "wss" if _is_https(request) else "ws"
     data["webSocketDebuggerUrl"] = f"{ws_scheme}://{host}/api/profiles/{profile_id}/cdp"
     return data
@@ -893,7 +893,7 @@ async def cdp_json_list(profile_id: str, request: Request):
         logger.error("CDP proxy: failed to reach Chrome CDP for %s: %s", profile_id, exc)
         raise HTTPException(status_code=502, detail="CDP endpoint unreachable")
 
-    host = request.headers.get("host", "localhost:8080")
+    host = request.headers.get("host", "localhost:3000")
     ws_scheme = "wss" if _is_https(request) else "ws"
     for entry in data:
         if "webSocketDebuggerUrl" in entry:

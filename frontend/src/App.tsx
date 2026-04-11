@@ -93,11 +93,14 @@ function AppContent({ authRequired, onLogout }: AppContentProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [view, setView] = useState<View>("empty");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [reconnectKey, setReconnectKey] = useState(0);
+  const maxReconnects = 3;
 
   const selected = profiles.find((p) => p.id === selectedId) ?? null;
 
   const handleSelect = useCallback((id: string) => {
     setSelectedId(id);
+    setReconnectKey(0);
     const profile = profiles.find((p) => p.id === id);
     setView(profile?.status === "running" ? "view" : "edit");
   }, [profiles]);
@@ -129,6 +132,7 @@ function AppContent({ authRequired, onLogout }: AppContentProps) {
 
   const handleLaunch = useCallback(async () => {
     if (!selectedId) return;
+    setReconnectKey(0);
     const result = await launch(selectedId);
     if (result) setView("view");
   }, [selectedId, launch]);
@@ -139,9 +143,28 @@ function AppContent({ authRequired, onLogout }: AppContentProps) {
     setView("edit");
   }, [selectedId, stop]);
 
-  const handleVncDisconnect = useCallback(() => {
-    setView("edit");
-  }, []);
+  const handleVncDisconnect = useCallback(async () => {
+    if (!selectedId) return;
+    // Wait briefly so the backend status can settle (e.g. browser close cleanup)
+    await new Promise((r) => setTimeout(r, 500));
+    try {
+      const profile = await api.getProfile(selectedId);
+      if (profile.status === "running") {
+        // Browser is still running — attempt reconnect
+        setReconnectKey((k) => {
+          if (k + 1 >= maxReconnects) {
+            setView("edit");
+            return 0;
+          }
+          return k + 1;
+        });
+      } else {
+        setView("edit");
+      }
+    } catch {
+      setView("edit");
+    }
+  }, [selectedId]);
 
   if (loading) {
     return (
@@ -244,7 +267,7 @@ function AppContent({ authRequired, onLogout }: AppContentProps) {
 
           {view === "view" && selected && selected.status === "running" && (
             <ProfileViewer
-              key={selected.id}
+              key={`${selected.id}-${reconnectKey}`}
               profileId={selected.id}
               cdpUrl={selected.cdp_url}
               clipboardSync={selected.clipboard_sync}
