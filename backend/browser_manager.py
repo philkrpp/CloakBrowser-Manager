@@ -375,4 +375,26 @@ class BrowserManager:
         if sh:
             args.append(f"--fingerprint-screen-height={sh}")
 
+        dm = profile.get("device_memory")
+        if dm is not None:
+            args.append(f"--fingerprint-device-memory={dm}")
+
+        wip = profile.get("webrtc_ip")
+        if wip:
+            args.append(f"--fingerprint-webrtc-ip={wip}")
+
+        sq = profile.get("storage_quota")
+        if sq is not None:
+            args.append(f"--fingerprint-storage-quota={sq}")
+
+        brand = profile.get("brand")
+        if brand:
+            args.append(f"--fingerprint-brand={brand}")
+
+        if not bool(profile.get("fingerprint_noise", True)):
+            args.append("--fingerprint-noise=false")
+
+        if bool(profile.get("disable_http2", False)):
+            args.append("--disable-http2")
+
         return args

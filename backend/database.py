@@ -44,11 +44,17 @@ def init_db():
                 gpu_vendor TEXT,
                 gpu_renderer TEXT,
                 hardware_concurrency INTEGER,
+                device_memory INTEGER,
+                webrtc_ip TEXT,
+                storage_quota INTEGER,
+                brand TEXT,
                 humanize BOOLEAN DEFAULT 0,
                 human_preset TEXT DEFAULT 'default',
                 headless BOOLEAN DEFAULT 0,
                 geoip BOOLEAN DEFAULT 0,
                 clipboard_sync BOOLEAN DEFAULT 1,
+                fingerprint_noise BOOLEAN DEFAULT 1,
+                disable_http2 BOOLEAN DEFAULT 0,
                 color_scheme TEXT,
                 notes TEXT,
                 user_data_dir TEXT NOT NULL,
@@ -69,6 +75,14 @@ def init_db():
         cols = {row[1] for row in conn.execute("PRAGMA table_info(profiles)").fetchall()}
         if "clipboard_sync" not in cols:
             conn.execute("ALTER TABLE profiles ADD COLUMN clipboard_sync BOOLEAN DEFAULT 1")
+            conn.commit()
+        if "device_memory" not in cols:
+            conn.execute("ALTER TABLE profiles ADD COLUMN device_memory INTEGER")
+            conn.execute("ALTER TABLE profiles ADD COLUMN webrtc_ip TEXT")
+            conn.execute("ALTER TABLE profiles ADD COLUMN storage_quota INTEGER")
+            conn.execute("ALTER TABLE profiles ADD COLUMN brand TEXT")
+            conn.execute("ALTER TABLE profiles ADD COLUMN fingerprint_noise BOOLEAN DEFAULT 1")
+            conn.execute("ALTER TABLE profiles ADD COLUMN disable_http2 BOOLEAN DEFAULT 0")
             conn.commit()
 
 

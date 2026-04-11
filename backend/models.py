@@ -20,11 +20,17 @@ class ProfileCreate(BaseModel):
     gpu_vendor: str | None = None
     gpu_renderer: str | None = None
     hardware_concurrency: int | None = None
+    device_memory: int | None = None  # navigator.deviceMemory in GB (2, 4, 8, 16)
+    webrtc_ip: str | None = None  # "auto" or explicit IP for WebRTC spoofing
+    storage_quota: int | None = None  # storage quota override in MB
+    brand: str | None = None  # browser brand: Chrome, Edge, Opera, Vivaldi
     humanize: bool = False
     human_preset: Literal["default", "careful"] = "default"
     headless: bool = False
     geoip: bool = False
     clipboard_sync: bool = True
+    fingerprint_noise: bool = True  # canvas/WebGL noise injection
+    disable_http2: bool = False  # disable HTTP/2 (workaround for some sites)
     color_scheme: Literal["light", "dark", "no-preference"] | None = None
     notes: str | None = None
     tags: list[TagCreate] | None = None
@@ -43,11 +49,17 @@ class ProfileUpdate(BaseModel):
     gpu_vendor: str | None = Field(default=None)
     gpu_renderer: str | None = Field(default=None)
     hardware_concurrency: int | None = Field(default=None)
+    device_memory: int | None = Field(default=None)
+    webrtc_ip: str | None = Field(default=None)
+    storage_quota: int | None = Field(default=None)
+    brand: str | None = Field(default=None)
     humanize: bool | None = None
     human_preset: Literal["default", "careful"] | None = None
     headless: bool | None = None
     geoip: bool | None = None
     clipboard_sync: bool | None = None
+    fingerprint_noise: bool | None = None
+    disable_http2: bool | None = None
     color_scheme: Literal["light", "dark", "no-preference"] | None = Field(default=None)
     notes: str | None = Field(default=None)
     tags: list[TagCreate] | None = None
@@ -77,11 +89,17 @@ class ProfileResponse(BaseModel):
     gpu_vendor: str | None = None
     gpu_renderer: str | None = None
     hardware_concurrency: int | None = None
+    device_memory: int | None = None
+    webrtc_ip: str | None = None
+    storage_quota: int | None = None
+    brand: str | None = None
     humanize: bool = False
     human_preset: str = "default"
     headless: bool = False
     geoip: bool = False
     clipboard_sync: bool = True
+    fingerprint_noise: bool = True
+    disable_http2: bool = False
 
     @field_validator("clipboard_sync", mode="before")
     @classmethod

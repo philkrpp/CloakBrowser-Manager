@@ -52,19 +52,32 @@ const GPU_PRESETS: Record<string, { vendor: string; renderer: string }> = {
   },
 };
 
+const DEFAULT_GPU_FOR_PLATFORM: Record<string, string> = {
+  windows: "NVIDIA RTX 4070",
+  macos: "Apple M3 (macOS)",
+  linux: "NVIDIA RTX 3070",
+};
+
 export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileFormProps) {
   const isEdit = profile !== null;
 
   const [form, setForm] = useState<ProfileCreateData>({
     name: "",
     platform: "windows",
+    timezone: "Europe/Berlin",
+    locale: "de-DE",
     screen_width: 1920,
     screen_height: 1080,
-    humanize: false,
+    gpu_vendor: GPU_PRESETS["NVIDIA RTX 4070"]!.vendor,
+    gpu_renderer: GPU_PRESETS["NVIDIA RTX 4070"]!.renderer,
+    humanize: true,
     human_preset: "default",
     headless: false,
     geoip: false,
     clipboard_sync: true,
+    fingerprint_noise: true,
+    disable_http2: false,
+    color_scheme: "light",
     tags: [],
   });
 
@@ -88,11 +101,17 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
         gpu_vendor: profile.gpu_vendor,
         gpu_renderer: profile.gpu_renderer,
         hardware_concurrency: profile.hardware_concurrency,
+        device_memory: profile.device_memory,
+        webrtc_ip: profile.webrtc_ip,
+        storage_quota: profile.storage_quota,
+        brand: profile.brand,
         humanize: profile.humanize,
         human_preset: profile.human_preset,
         headless: profile.headless,
         geoip: profile.geoip,
         clipboard_sync: profile.clipboard_sync,
+        fingerprint_noise: profile.fingerprint_noise,
+        disable_http2: profile.disable_http2,
         color_scheme: profile.color_scheme,
         notes: profile.notes,
         tags: profile.tags ?? [],
@@ -204,11 +223,30 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
               <select
                 className="input"
                 value={form.platform}
-                onChange={(e) => set("platform", e.target.value)}
+                onChange={(e) => {
+                  const p = e.target.value;
+                  set("platform", p);
+                  const presetName = DEFAULT_GPU_FOR_PLATFORM[p];
+                  if (presetName) applyGpuPreset(presetName);
+                }}
               >
                 <option value="windows">Windows</option>
                 <option value="macos">macOS</option>
                 <option value="linux">Linux</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">Browser Brand</label>
+              <select
+                className="input"
+                value={form.brand ?? ""}
+                onChange={(e) => set("brand", e.target.value || null)}
+              >
+                <option value="">Auto (Chrome)</option>
+                <option value="Chrome">Chrome</option>
+                <option value="Edge">Edge</option>
+                <option value="Opera">Opera</option>
+                <option value="Vivaldi">Vivaldi</option>
               </select>
             </div>
             <div>
@@ -299,6 +337,24 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
               />
               Auto-detect timezone/locale from proxy IP (GeoIP)
             </label>
+            <div>
+              <label className="label">WebRTC IP</label>
+              <input
+                className="input"
+                value={form.webrtc_ip ?? ""}
+                onChange={(e) => set("webrtc_ip", e.target.value || null)}
+                placeholder="auto or explicit IP (e.g. 1.2.3.4)"
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.disable_http2 ?? false}
+                onChange={(e) => set("disable_http2", e.target.checked)}
+                className="rounded border-border bg-surface-2"
+              />
+              Disable HTTP/2 (workaround for sites blocking fresh sessions)
+            </label>
           </div>
         </section>
 
@@ -358,6 +414,20 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
               />
             </div>
             <div>
+              <label className="label">Device Memory</label>
+              <select
+                className="input"
+                value={form.device_memory ?? ""}
+                onChange={(e) => set("device_memory", e.target.value ? Number(e.target.value) : null)}
+              >
+                <option value="">Auto (from seed)</option>
+                <option value="2">2 GB</option>
+                <option value="4">4 GB</option>
+                <option value="8">8 GB</option>
+                <option value="16">16 GB</option>
+              </select>
+            </div>
+            <div>
               <label className="label">GPU Preset</label>
               <select
                 className="input"
@@ -388,6 +458,16 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
                 value={form.gpu_renderer ?? ""}
                 onChange={(e) => set("gpu_renderer", e.target.value || null)}
                 placeholder="Auto (from seed)"
+              />
+            </div>
+            <div>
+              <label className="label">Storage Quota (MB)</label>
+              <input
+                className="input"
+                type="number"
+                value={form.storage_quota ?? ""}
+                onChange={(e) => set("storage_quota", e.target.value ? Number(e.target.value) : null)}
+                placeholder="Auto (default ~500)"
               />
             </div>
           </div>
@@ -427,6 +507,24 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
                 className="rounded border-border bg-surface-2"
               />
               Enable clipboard sync by default in VNC viewer
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.headless ?? false}
+                onChange={(e) => set("headless", e.target.checked)}
+                className="rounded border-border bg-surface-2"
+              />
+              Headless mode (no VNC display)
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.fingerprint_noise ?? true}
+                onChange={(e) => set("fingerprint_noise", e.target.checked)}
+                className="rounded border-border bg-surface-2"
+              />
+              Fingerprint noise injection (canvas, WebGL, audio, client rects)
             </label>
             <div>
               <label className="label">Color Scheme</label>
