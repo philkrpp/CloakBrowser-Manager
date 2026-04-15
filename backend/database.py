@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 import random
 import sqlite3
 import uuid
@@ -56,6 +57,7 @@ def init_db():
                 fingerprint_noise BOOLEAN DEFAULT 1,
                 disable_http2 BOOLEAN DEFAULT 0,
                 incognito BOOLEAN DEFAULT 0,
+                launch_args TEXT DEFAULT '[]',
                 color_scheme TEXT,
                 notes TEXT,
                 user_data_dir TEXT NOT NULL,
@@ -88,6 +90,9 @@ def init_db():
         if "incognito" not in cols:
             conn.execute("ALTER TABLE profiles ADD COLUMN incognito BOOLEAN DEFAULT 0")
             conn.commit()
+        if "launch_args" not in cols:
+            conn.execute("ALTER TABLE profiles ADD COLUMN launch_args TEXT DEFAULT '[]'")
+            conn.commit()
 
 
 def _now() -> str:
@@ -113,8 +118,8 @@ def create_profile(
                 hardware_concurrency, device_memory, webrtc_ip, storage_quota, brand,
                 humanize, human_preset, headless, geoip,
                 clipboard_sync, fingerprint_noise, disable_http2, incognito,
-                color_scheme, notes, user_data_dir, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                launch_args, color_scheme, notes, user_data_dir, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 profile_id, name, seed,
                 fields.get("proxy"),
@@ -139,6 +144,7 @@ def create_profile(
                 fields.get("fingerprint_noise", True),
                 fields.get("disable_http2", False),
                 fields.get("incognito", False),
+                json.dumps(fields.get("launch_args") or []),
                 fields.get("color_scheme"),
                 fields.get("notes"),
                 user_data_dir, now, now,
@@ -160,6 +166,7 @@ def get_profile(profile_id: str) -> dict[str, Any] | None:
         if not row:
             return None
         profile = dict(row)
+        profile["launch_args"] = json.loads(profile.get("launch_args") or "[]")
         tags = conn.execute(
             "SELECT tag, color FROM profile_tags WHERE profile_id = ?",
             (profile_id,),
@@ -174,6 +181,7 @@ def list_profiles() -> list[dict[str, Any]]:
         profiles = []
         for row in rows:
             profile = dict(row)
+            profile["launch_args"] = json.loads(profile.get("launch_args") or "[]")
             tags = conn.execute(
                 "SELECT tag, color FROM profile_tags WHERE profile_id = ?",
                 (profile["id"],),
@@ -193,13 +201,17 @@ def update_profile(profile_id: str, **fields: Any) -> dict[str, Any] | None:
     # Only update fields that were explicitly provided
     update_cols = []
     update_vals = []
+    # Pre-serialize launch_args to JSON before the generic update loop
+    if "launch_args" in fields:
+        fields["launch_args"] = json.dumps(fields["launch_args"] or [])
+
     for col in (
         "name", "fingerprint_seed", "proxy", "timezone", "locale", "platform",
         "user_agent", "screen_width", "screen_height", "gpu_vendor", "gpu_renderer",
         "hardware_concurrency", "device_memory", "webrtc_ip", "storage_quota", "brand",
         "humanize", "human_preset", "headless", "geoip",
         "clipboard_sync", "fingerprint_noise", "disable_http2", "incognito",
-        "color_scheme", "notes",
+        "launch_args", "color_scheme", "notes",
     ):
         if col in fields:
             update_cols.append(f"{col} = ?")

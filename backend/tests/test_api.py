@@ -191,6 +191,42 @@ def test_system_status(app_client: TestClient):
     assert data["profiles_total"] >= 1
 
 
+# ── Launch Args ─────────────────────────────────────────────────────────────
+
+
+def test_profile_launch_args_default_empty(app_client: TestClient):
+    resp = app_client.post("/api/profiles", json={"name": "NoArgs"})
+    assert resp.status_code == 201
+    assert resp.json()["launch_args"] == []
+
+
+def test_profile_launch_args_create(app_client: TestClient):
+    resp = app_client.post("/api/profiles", json={
+        "name": "WithArgs",
+        "launch_args": ["--load-extension=/data/ext", "--disable-features=Foo"],
+    })
+    assert resp.status_code == 201
+    assert resp.json()["launch_args"] == ["--load-extension=/data/ext", "--disable-features=Foo"]
+
+
+def test_profile_launch_args_update(app_client: TestClient):
+    resp = app_client.post("/api/profiles", json={"name": "UpdateArgs"})
+    pid = resp.json()["id"]
+    resp = app_client.put(f"/api/profiles/{pid}", json={"launch_args": ["--new-flag"]})
+    assert resp.status_code == 200
+    assert resp.json()["launch_args"] == ["--new-flag"]
+
+
+def test_profile_launch_args_get(app_client: TestClient):
+    resp = app_client.post("/api/profiles", json={
+        "name": "GetArgs",
+        "launch_args": ["--flag"],
+    })
+    pid = resp.json()["id"]
+    resp = app_client.get(f"/api/profiles/{pid}")
+    assert resp.json()["launch_args"] == ["--flag"]
+
+
 # ── Clipboard Sync Setting ──────────────────────────────────────────────────
 
 

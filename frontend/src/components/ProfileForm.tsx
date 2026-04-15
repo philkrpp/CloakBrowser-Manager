@@ -79,6 +79,7 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
     disable_http2: false,
     incognito: false,
     color_scheme: "light",
+    launch_args: [],
     tags: [],
   });
 
@@ -86,6 +87,7 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
   const [deleting, setDeleting] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [tagColor, setTagColor] = useState<string | null>("#6366f1");
+  const [launchArgInput, setLaunchArgInput] = useState("");
 
   useEffect(() => {
     if (profile) {
@@ -115,6 +117,7 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
         disable_http2: profile.disable_http2,
         incognito: profile.incognito,
         color_scheme: profile.color_scheme,
+        launch_args: profile.launch_args ?? [],
         notes: profile.notes,
         tags: profile.tags ?? [],
       });
@@ -173,6 +176,18 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
 
   const removeTag = (tag: string) => {
     set("tags", (form.tags ?? []).filter((t) => t.tag !== tag));
+  };
+
+  const addLaunchArg = () => {
+    const arg = launchArgInput.trim();
+    if (!arg) return;
+    if ((form.launch_args ?? []).includes(arg)) return;
+    set("launch_args", [...(form.launch_args ?? []), arg]);
+    setLaunchArgInput("");
+  };
+
+  const removeLaunchArg = (idx: number) => {
+    set("launch_args", (form.launch_args ?? []).filter((_, i) => i !== idx));
   };
 
   return (
@@ -609,6 +624,43 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
               placeholder="Add tag..."
             />
             <button type="button" onClick={addTag} className="btn-secondary text-xs">
+              Add
+            </button>
+          </div>
+        </section>
+
+        {/* Launch Args */}
+        <section>
+          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Launch Args</h3>
+          <p className="text-xs text-gray-500 mb-2">Custom Chromium flags passed at launch (e.g. --load-extension, --disable-features)</p>
+          {(form.launch_args ?? []).length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {(form.launch_args ?? []).map((arg, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-surface-3 text-gray-300 font-mono"
+                >
+                  {arg}
+                  <button
+                    type="button"
+                    onClick={() => removeLaunchArg(idx)}
+                    className="hover:opacity-70"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <input
+              className="input flex-1 font-mono"
+              value={launchArgInput}
+              onChange={(e) => setLaunchArgInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addLaunchArg(); } }}
+              placeholder="--load-extension=/data/extensions/ublock"
+            />
+            <button type="button" onClick={addLaunchArg} className="btn-secondary text-xs">
               Add
             </button>
           </div>

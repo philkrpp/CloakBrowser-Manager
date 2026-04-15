@@ -29,6 +29,7 @@ export interface Profile {
   disable_http2: boolean;
   incognito: boolean;
   color_scheme: string | null;
+  launch_args: string[];
   notes: string | null;
   user_data_dir: string;
   created_at: string;
@@ -65,6 +66,7 @@ export interface ProfileCreateData {
   disable_http2?: boolean;
   incognito?: boolean;
   color_scheme?: string | null;
+  launch_args?: string[];
   notes?: string | null;
   tags?: { tag: string; color: string | null }[];
 }

@@ -60,6 +60,22 @@ def test_profile_create_all_fields():
     assert len(p.tags) == 1
 
 
+def test_profile_create_launch_args_default():
+    p = ProfileCreate(name="Test")
+    assert p.launch_args == []
+
+
+def test_profile_create_with_launch_args():
+    p = ProfileCreate(name="Test", launch_args=["--load-extension=/tmp/ext"])
+    assert p.launch_args == ["--load-extension=/tmp/ext"]
+
+
+def test_profile_update_launch_args():
+    p = ProfileUpdate(launch_args=["--flag"])
+    dumped = p.model_dump(exclude_unset=True)
+    assert dumped == {"launch_args": ["--flag"]}
+
+
 def test_profile_create_invalid_platform():
     with pytest.raises(ValidationError):
         ProfileCreate(name="Bad", platform="android")

@@ -104,6 +104,40 @@ def test_create_profile_defaults(tmp_db: Path):
     assert p["headless"] == 0
     assert p["geoip"] == 0
     assert p["human_preset"] == "default"
+    assert p["launch_args"] == []
+
+
+def test_create_profile_with_launch_args(tmp_db: Path):
+    p = db.create_profile("WithArgs", launch_args=["--load-extension=/tmp/ext", "--disable-features=Foo"])
+    assert p["launch_args"] == ["--load-extension=/tmp/ext", "--disable-features=Foo"]
+
+
+def test_get_profile_launch_args_roundtrip(tmp_db: Path):
+    p = db.create_profile("Args", launch_args=["--flag1", "--flag2"])
+    fetched = db.get_profile(p["id"])
+    assert fetched["launch_args"] == ["--flag1", "--flag2"]
+
+
+def test_update_profile_launch_args(tmp_db: Path):
+    p = db.create_profile("Args")
+    assert p["launch_args"] == []
+    updated = db.update_profile(p["id"], launch_args=["--new-flag"])
+    assert updated["launch_args"] == ["--new-flag"]
+
+
+def test_update_profile_launch_args_none_becomes_empty(tmp_db: Path):
+    p = db.create_profile("Args", launch_args=["--flag"])
+    updated = db.update_profile(p["id"], launch_args=None)
+    assert updated["launch_args"] == []
+
+
+def test_list_profiles_includes_launch_args(tmp_db: Path):
+    db.create_profile("A", launch_args=["--arg1"])
+    db.create_profile("B")
+    profiles = db.list_profiles()
+    args_by_name = {p["name"]: p["launch_args"] for p in profiles}
+    assert args_by_name["A"] == ["--arg1"]
+    assert args_by_name["B"] == []
 
 
 # ── get_profile ──────────────────────────────────────────────────────────────

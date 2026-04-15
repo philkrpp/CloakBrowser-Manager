@@ -33,6 +33,7 @@ class ProfileCreate(BaseModel):
     disable_http2: bool = False  # disable HTTP/2 (workaround for some sites)
     incognito: bool = False  # no persistent user data dir
     color_scheme: Literal["light", "dark", "no-preference"] | None = None
+    launch_args: list[str] = Field(default_factory=list)
     notes: str | None = None
     tags: list[TagCreate] | None = None
 
@@ -63,6 +64,7 @@ class ProfileUpdate(BaseModel):
     disable_http2: bool | None = None
     incognito: bool | None = None
     color_scheme: Literal["light", "dark", "no-preference"] | None = Field(default=None)
+    launch_args: list[str] | None = None
     notes: str | None = Field(default=None)
     tags: list[TagCreate] | None = None
 
@@ -110,6 +112,7 @@ class ProfileResponse(BaseModel):
         return v if v is not None else True
 
     color_scheme: str | None = None
+    launch_args: list[str] = []
     notes: str | None = None
     user_data_dir: str
     created_at: str

@@ -211,6 +211,7 @@ class BrowserManager:
 
             # Build fingerprint args from profile settings
             extra_args = self._build_fingerprint_args(profile)
+            extra_args += profile.get("launch_args") or []
             extra_args.append(f"--remote-debugging-port={cdp_port}")
 
             # Normalize proxy format (host:port:user:pass → http://user:pass@host:port)

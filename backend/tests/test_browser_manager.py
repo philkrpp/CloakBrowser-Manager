@@ -138,6 +138,40 @@ def test_build_args_empty_profile():
     assert len(args) == 3
 
 
+# ── launch_args appended to extra_args ────────────────────────────────────────
+
+
+def test_launch_args_appended_to_fingerprint_args():
+    """launch_args from profile should appear in the args list after fingerprint args."""
+    profile = {
+        "fingerprint_seed": 42,
+        "platform": "windows",
+        "launch_args": ["--load-extension=/tmp/ext", "--disable-features=Foo"],
+    }
+    args = _mgr._build_fingerprint_args(profile)
+    args += profile.get("launch_args") or []
+    assert "--load-extension=/tmp/ext" in args
+    assert "--disable-features=Foo" in args
+    # Fingerprint args still present
+    assert "--fingerprint=42" in args
+
+
+def test_launch_args_empty_no_effect():
+    profile = {"launch_args": []}
+    args = _mgr._build_fingerprint_args(profile)
+    base_count = len(args)
+    args += profile.get("launch_args") or []
+    assert len(args) == base_count
+
+
+def test_launch_args_none_no_effect():
+    profile = {"launch_args": None}
+    args = _mgr._build_fingerprint_args(profile)
+    base_count = len(args)
+    args += profile.get("launch_args") or []
+    assert len(args) == base_count
+
+
 # ── _init_profile_defaults ───────────────────────────────────────────────────
 
 
