@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ClipboardCopy, Code2, Maximize2, Minimize2 } from "lucide-react";
+import { Cable, ClipboardCopy, Code2, Maximize2, Minimize2 } from "lucide-react";
 import { api } from "../lib/api";
 
 interface ProfileViewerProps {
@@ -20,6 +20,7 @@ export function ProfileViewer({ profileId, cdpUrl, clipboardSync: initialClipboa
   const [fullscreen, setFullscreen] = useState(false);
   const [clipboardSync, setClipboardSync] = useState(initialClipboardSync);
   const [cdpCopied, setCdpCopied] = useState(false);
+  const [wssCopied, setWssCopied] = useState(false);
 
   useEffect(() => {
     let rfb: any = null;
@@ -251,6 +252,22 @@ export function ProfileViewer({ profileId, cdpUrl, clipboardSync: initialClipboa
               title={cdpCopied ? "Copied!" : "Copy CDP endpoint URL"}
             >
               <Code2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {cdpUrl && (
+            <button
+              onClick={() => {
+                const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+                const wssUrl = `${protocol}//${window.location.host}${cdpUrl}`;
+                navigator.clipboard?.writeText(wssUrl).then(() => {
+                  setWssCopied(true);
+                  setTimeout(() => setWssCopied(false), 2000);
+                }).catch((err) => console.warn("[cdp] wss copy failed:", err));
+              }}
+              className={`p-1 ${wssCopied ? "text-emerald-400" : "text-gray-500 hover:text-gray-300"}`}
+              title={wssCopied ? "Copied!" : "Copy WebSocket URL (for Playwright/Puppeteer)"}
+            >
+              <Cable className="h-3.5 w-3.5" />
             </button>
           )}
           <button
