@@ -1,0 +1,131 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - img [ref=e8]
+        - heading "CloakBrowser Manager" [level=1] [ref=e10]
+      - generic [ref=e11]:
+        - img [ref=e12]
+        - textbox "Search profiles..." [ref=e15]
+    - generic [ref=e17]: No profiles yet
+    - button "New Profile" [active] [ref=e19] [cursor=pointer]:
+      - img [ref=e20]
+      - generic [ref=e21]: New Profile
+  - generic [ref=e22]:
+    - button "Hide sidebar" [ref=e25] [cursor=pointer]:
+      - img [ref=e26]
+    - generic [ref=e33]:
+      - generic [ref=e34]:
+        - heading "New Profile" [level=2] [ref=e36]
+        - generic [ref=e37]:
+          - button "Cancel" [ref=e38] [cursor=pointer]
+          - button "Create" [ref=e39] [cursor=pointer]:
+            - img [ref=e40]
+            - generic [ref=e44]: Create
+      - generic [ref=e45]:
+        - generic [ref=e46]:
+          - heading "Basic" [level=3] [ref=e47]
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - generic [ref=e50]: Profile Name
+              - 'textbox "e.g. Amazon Seller #1" [ref=e51]'
+            - generic [ref=e52]:
+              - generic [ref=e53]: Platform
+              - combobox [ref=e54]:
+                - option "Windows"
+                - option "macOS"
+                - option "Linux" [selected]
+            - generic [ref=e55]:
+              - generic [ref=e56]: Fingerprint Seed
+              - generic [ref=e57]:
+                - spinbutton [ref=e58]
+                - button "Randomize seed" [ref=e59] [cursor=pointer]:
+                  - img [ref=e60]
+        - generic [ref=e77]:
+          - heading "Network" [level=3] [ref=e78]
+          - generic [ref=e79]:
+            - generic [ref=e80]:
+              - generic [ref=e81]: Proxy
+              - textbox "http://user:pass@host:port" [ref=e82]
+            - generic [ref=e83]:
+              - generic [ref=e84]:
+                - generic [ref=e85]: Timezone
+                - textbox "America/New_York" [ref=e86]: Europe/Berlin
+              - generic [ref=e87]:
+                - generic [ref=e88]: Locale
+                - textbox "en-US" [ref=e89]: de-DE
+            - generic [ref=e90] [cursor=pointer]:
+              - checkbox "Auto-detect timezone/locale from proxy IP (GeoIP)" [ref=e91]
+              - text: Auto-detect timezone/locale from proxy IP (GeoIP)
+        - generic [ref=e92]:
+          - heading "Hardware" [level=3] [ref=e93]
+          - generic [ref=e94]:
+            - generic [ref=e95]:
+              - generic [ref=e96]: Screen Resolution
+              - combobox [ref=e97]:
+                - option "1920 × 1080 (Full HD)" [selected]
+                - option "2560 × 1440 (QHD)"
+                - option "1366 × 768 (HD)"
+                - option "1440 × 900"
+                - option "1536 × 864"
+                - option "1280 × 720 (720p)"
+                - option "Custom"
+            - generic [ref=e98]:
+              - generic [ref=e99]: Hardware Concurrency
+              - spinbutton [ref=e100]
+            - generic [ref=e101]:
+              - generic [ref=e102]: GPU Preset
+              - combobox [ref=e103]:
+                - option "Select preset..." [selected]
+                - option "NVIDIA RTX 3070"
+                - option "NVIDIA RTX 4070"
+                - option "AMD RX 6800 XT"
+                - option "Intel UHD 770"
+                - option "Apple M3 (macOS)"
+            - generic [ref=e104]:
+              - generic [ref=e105]: GPU Vendor
+              - textbox "Auto (from seed)" [ref=e106]: Google Inc. (NVIDIA)
+            - generic [ref=e107]:
+              - generic [ref=e108]: GPU Renderer
+              - textbox "Auto (from seed)" [ref=e109]: ANGLE (NVIDIA, NVIDIA GeForce RTX 3070 (0x00002484) Direct3D11 vs_5_0 ps_5_0, D3D11)
+        - generic [ref=e110]:
+          - heading "Behavior" [level=3] [ref=e111]
+          - generic [ref=e112]:
+            - generic [ref=e113] [cursor=pointer]:
+              - checkbox "Human-like mouse, keyboard, and scroll behavior" [checked] [ref=e114]
+              - text: Human-like mouse, keyboard, and scroll behavior
+            - generic [ref=e115]:
+              - generic [ref=e116]: Human Preset
+              - combobox [ref=e117]:
+                - option "Default (normal speed)" [selected]
+                - option "Careful (slower, deliberate)"
+            - generic [ref=e118] [cursor=pointer]:
+              - checkbox "Enable clipboard sync by default in VNC viewer" [checked] [ref=e119]
+              - text: Enable clipboard sync by default in VNC viewer
+            - generic [ref=e120]:
+              - generic [ref=e121]: Color Scheme
+              - combobox [ref=e122]:
+                - option "System default"
+                - option "Light" [selected]
+                - option "Dark"
+                - option "No preference"
+            - generic [ref=e123]:
+              - generic [ref=e124]: User Agent
+              - textbox "Auto (from binary)" [ref=e125]
+        - generic [ref=e126]:
+          - heading "Tags" [level=3] [ref=e127]
+          - generic [ref=e128]:
+            - generic [ref=e129]:
+              - button [ref=e130] [cursor=pointer]
+              - button [ref=e131] [cursor=pointer]
+              - button [ref=e132] [cursor=pointer]
+              - button [ref=e133] [cursor=pointer]
+              - button [ref=e134] [cursor=pointer]
+              - button [ref=e135] [cursor=pointer]
+              - button [ref=e136] [cursor=pointer]
+              - button [ref=e137] [cursor=pointer]
+            - textbox "Add tag..." [ref=e138]
+            - button "Add" [ref=e139] [cursor=pointer]
+        - generic [ref=e140]:
+          - heading "Notes" [level=3] [ref=e141]
+          - textbox "Optional notes about this profile..." [ref=e142]
