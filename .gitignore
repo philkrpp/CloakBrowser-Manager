@@ -21,6 +21,7 @@ deploy.sh
 # Claude Code
 .claude/
 CLAUDE.md
+AGENTS.md
 publish-docker.sh
 .beads
 debug
