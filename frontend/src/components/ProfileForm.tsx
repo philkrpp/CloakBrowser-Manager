@@ -78,6 +78,7 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
     fingerprint_noise: true,
     disable_http2: false,
     incognito: false,
+    auto_start: false,
     color_scheme: "light",
     launch_args: [],
     tags: [],
@@ -116,6 +117,7 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
         fingerprint_noise: profile.fingerprint_noise,
         disable_http2: profile.disable_http2,
         incognito: profile.incognito,
+        auto_start: profile.auto_start,
         color_scheme: profile.color_scheme,
         launch_args: profile.launch_args ?? [],
         notes: profile.notes,
@@ -542,6 +544,15 @@ export function ProfileForm({ profile, onSave, onDelete, onCancel }: ProfileForm
                 className="rounded border-border bg-surface-2"
               />
               Inkognito (kein persistentes Datenverzeichnis — Cookies/Cache werden beim Schließen gelöscht)
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.auto_start ?? false}
+                onChange={(e) => set("auto_start", e.target.checked)}
+                className="rounded border-border bg-surface-2"
+              />
+              Auto-Start bei Verbindung (Profil wird automatisch gestartet wenn eine VNC/CDP-Verbindung eingeht)
             </label>
             <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
               <input

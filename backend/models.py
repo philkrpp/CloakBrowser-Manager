@@ -34,6 +34,7 @@ class ProfileCreate(BaseModel):
     incognito: bool = False  # no persistent user data dir
     color_scheme: Literal["light", "dark", "no-preference"] | None = None
     launch_args: list[str] = Field(default_factory=list)
+    auto_start: bool = False  # auto-launch when VNC/CDP connection arrives
     notes: str | None = None
     tags: list[TagCreate] | None = None
 
@@ -65,6 +66,7 @@ class ProfileUpdate(BaseModel):
     incognito: bool | None = None
     color_scheme: Literal["light", "dark", "no-preference"] | None = Field(default=None)
     launch_args: list[str] | None = None
+    auto_start: bool | None = None
     notes: str | None = Field(default=None)
     tags: list[TagCreate] | None = None
 
@@ -105,6 +107,7 @@ class ProfileResponse(BaseModel):
     fingerprint_noise: bool = True
     disable_http2: bool = False
     incognito: bool = False
+    auto_start: bool = False
 
     @field_validator("clipboard_sync", mode="before")
     @classmethod

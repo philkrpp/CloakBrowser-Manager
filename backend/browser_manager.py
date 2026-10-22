@@ -161,6 +161,7 @@ class BrowserManager:
     def __init__(self):
         self.running: dict[str, RunningProfile] = {}
         self._launching: set[str] = set()  # profile IDs currently being launched
+        self._launch_events: dict[str, asyncio.Event] = {}  # for auto-start coordination
         self.vnc = VNCManager()
         self._lock = asyncio.Lock()
 
@@ -338,6 +339,65 @@ class BrowserManager:
                 "cdp_url": f"/api/profiles/{profile_id}/cdp",
             }
         return {"status": "stopped", "vnc_ws_port": None, "display": None, "cdp_url": None}
+
+    async def ensure_running(
+        self, profile: dict[str, Any], timeout: float = 30.0,
+    ) -> RunningProfile:
+        """Ensure a profile is running, launching it if necessary.
+
+        If someone else is already launching the same profile, waits for that
+        launch to finish instead of starting a second one.
+        """
+        profile_id = profile["id"]
+
+        # Fast path: already running
+        running = self.running.get(profile_id)
+        if running:
+            return running
+
+        # Determine whether WE should launch or wait for an in-progress launch
+        should_launch = False
+        async with self._lock:
+            running = self.running.get(profile_id)
+            if running:
+                return running
+
+            if profile_id not in self._launching:
+                should_launch = True
+                # Create event before launching so waiters can find it
+                self._launch_events[profile_id] = asyncio.Event()
+            else:
+                # Ensure an event exists for waiters
+                if profile_id not in self._launch_events:
+                    self._launch_events[profile_id] = asyncio.Event()
+
+        if should_launch:
+            try:
+                result = await asyncio.wait_for(
+                    self.launch(profile), timeout=timeout,
+                )
+                return result
+            finally:
+                async with self._lock:
+                    evt = self._launch_events.pop(profile_id, None)
+                if evt:
+                    evt.set()
+        else:
+            # Wait for the other caller's launch to complete
+            evt = self._launch_events.get(profile_id)
+            if not evt:
+                raise RuntimeError(f"Profile {profile_id} launch event missing")
+            try:
+                await asyncio.wait_for(evt.wait(), timeout=timeout)
+            except asyncio.TimeoutError:
+                raise TimeoutError(
+                    f"Timed out waiting for profile {profile_id} to start"
+                )
+
+            running = self.running.get(profile_id)
+            if not running:
+                raise RuntimeError(f"Profile {profile_id} failed to start")
+            return running
 
     async def cleanup_all(self):
         """Stop all running profiles. Called on shutdown."""

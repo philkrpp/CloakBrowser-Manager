@@ -25,7 +25,7 @@ import starlette.requests
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from . import database as db
-from .browser_manager import BrowserManager
+from .browser_manager import BrowserManager, RunningProfile
 from .models import (
     ClipboardRequest,
     LaunchResponse,
@@ -383,6 +383,38 @@ app = FastAPI(title="CloakBrowser Manager", lifespan=lifespan)
 app.add_middleware(AuthMiddleware)
 
 
+# ── Auto-start helper ─────────────────────────────────────────────────────────
+
+AUTO_START_TIMEOUT = 30.0  # seconds to wait for auto-launch
+
+
+async def _auto_start_if_enabled(profile_id: str) -> RunningProfile | None:
+    """If profile has auto_start enabled and is not running, launch it.
+
+    Returns RunningProfile on success, None if auto_start is disabled.
+    """
+    running = browser_mgr.running.get(profile_id)
+    if running:
+        return running
+
+    profile = db.get_profile(profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    if not profile.get("auto_start"):
+        return None
+
+    try:
+        return await browser_mgr.ensure_running(profile, timeout=AUTO_START_TIMEOUT)
+    except TimeoutError:
+        raise HTTPException(status_code=504, detail="Auto-start timed out")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        logger.error("Auto-start failed for profile %s: %s", profile_id, exc)
+        raise HTTPException(status_code=500, detail="Auto-start failed")
+
+
 # ── Authentication ────────────────────────────────────────────────────────────
 
 
@@ -675,8 +707,18 @@ async def vnc_proxy(websocket: WebSocket, profile_id: str):
 
     running = browser_mgr.running.get(profile_id)
     if not running:
-        await websocket.close(code=4004, reason="Profile not running")
-        return
+        profile = db.get_profile(profile_id)
+        if not profile or not profile.get("auto_start"):
+            await websocket.close(code=4004, reason="Profile not running")
+            return
+        try:
+            running = await browser_mgr.ensure_running(
+                profile, timeout=AUTO_START_TIMEOUT,
+            )
+        except Exception as exc:
+            logger.error("VNC auto-start failed for %s: %s", profile_id, exc)
+            await websocket.close(code=4005, reason="Auto-start failed")
+            return
 
     # Accept with client's requested subprotocol (if any) — RFC 6455 requires
     # the server must not respond with a subprotocol the client didn't request.
@@ -851,7 +893,9 @@ async def cdp_info(profile_id: str):
     """Return CDP connection info. Prevents SPA catch-all from serving index.html."""
     running = browser_mgr.running.get(profile_id)
     if not running:
-        raise HTTPException(status_code=404, detail="Profile not running")
+        running = await _auto_start_if_enabled(profile_id)
+        if not running:
+            raise HTTPException(status_code=404, detail="Profile not running")
     return {
         "cdp_url": f"/api/profiles/{profile_id}/cdp",
         "usage": "playwright.chromium.connect_over_cdp('http://<host>/api/profiles/"
@@ -865,7 +909,9 @@ async def cdp_json_version(profile_id: str, request: Request):
     """Proxy Chrome's /json/version, rewriting WS URLs to go through our proxy."""
     running = browser_mgr.running.get(profile_id)
     if not running:
-        raise HTTPException(status_code=404, detail="Profile not running")
+        running = await _auto_start_if_enabled(profile_id)
+        if not running:
+            raise HTTPException(status_code=404, detail="Profile not running")
 
     try:
         async with httpx.AsyncClient() as client:
@@ -892,7 +938,9 @@ async def cdp_json_list(profile_id: str, request: Request):
     """Proxy Chrome's /json/list, rewriting WS URLs."""
     running = browser_mgr.running.get(profile_id)
     if not running:
-        raise HTTPException(status_code=404, detail="Profile not running")
+        running = await _auto_start_if_enabled(profile_id)
+        if not running:
+            raise HTTPException(status_code=404, detail="Profile not running")
 
     try:
         async with httpx.AsyncClient() as client:
@@ -983,8 +1031,18 @@ async def cdp_proxy(websocket: WebSocket, profile_id: str):
 
     running = browser_mgr.running.get(profile_id)
     if not running:
-        await websocket.close(code=4004, reason="Profile not running")
-        return
+        profile = db.get_profile(profile_id)
+        if not profile or not profile.get("auto_start"):
+            await websocket.close(code=4004, reason="Profile not running")
+            return
+        try:
+            running = await browser_mgr.ensure_running(
+                profile, timeout=AUTO_START_TIMEOUT,
+            )
+        except Exception as exc:
+            logger.error("CDP auto-start failed for %s: %s", profile_id, exc)
+            await websocket.close(code=4005, reason="Auto-start failed")
+            return
 
     await websocket.accept()
 
@@ -1011,8 +1069,18 @@ async def cdp_page_proxy(websocket: WebSocket, profile_id: str, path: str):
 
     running = browser_mgr.running.get(profile_id)
     if not running:
-        await websocket.close(code=4004, reason="Profile not running")
-        return
+        profile = db.get_profile(profile_id)
+        if not profile or not profile.get("auto_start"):
+            await websocket.close(code=4004, reason="Profile not running")
+            return
+        try:
+            running = await browser_mgr.ensure_running(
+                profile, timeout=AUTO_START_TIMEOUT,
+            )
+        except Exception as exc:
+            logger.error("CDP page auto-start failed for %s: %s", profile_id, exc)
+            await websocket.close(code=4005, reason="Auto-start failed")
+            return
 
     await websocket.accept()
 

@@ -28,6 +28,7 @@ export interface Profile {
   fingerprint_noise: boolean;
   disable_http2: boolean;
   incognito: boolean;
+  auto_start: boolean;
   color_scheme: string | null;
   launch_args: string[];
   notes: string | null;
@@ -65,6 +66,7 @@ export interface ProfileCreateData {
   fingerprint_noise?: boolean;
   disable_http2?: boolean;
   incognito?: boolean;
+  auto_start?: boolean;
   color_scheme?: string | null;
   launch_args?: string[];
   notes?: string | null;

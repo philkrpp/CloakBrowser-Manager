@@ -93,6 +93,9 @@ def init_db():
         if "launch_args" not in cols:
             conn.execute("ALTER TABLE profiles ADD COLUMN launch_args TEXT DEFAULT '[]'")
             conn.commit()
+        if "auto_start" not in cols:
+            conn.execute("ALTER TABLE profiles ADD COLUMN auto_start BOOLEAN DEFAULT 0")
+            conn.commit()
 
 
 def _now() -> str:
@@ -118,8 +121,9 @@ def create_profile(
                 hardware_concurrency, device_memory, webrtc_ip, storage_quota, brand,
                 humanize, human_preset, headless, geoip,
                 clipboard_sync, fingerprint_noise, disable_http2, incognito,
-                launch_args, color_scheme, notes, user_data_dir, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                launch_args, color_scheme, notes, auto_start,
+                user_data_dir, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 profile_id, name, seed,
                 fields.get("proxy"),
@@ -147,6 +151,7 @@ def create_profile(
                 json.dumps(fields.get("launch_args") or []),
                 fields.get("color_scheme"),
                 fields.get("notes"),
+                fields.get("auto_start", False),
                 user_data_dir, now, now,
             ),
         )
